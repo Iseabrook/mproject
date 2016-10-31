@@ -6,6 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 p = 6.2e-30  # Dipole moment of water molecule.
 a = 275e-12  # Distance between Oxygen atoms along each bond.
 au = 5.26e-11  # Atomic unit of length.
+sqrt_3 = 1.73205  # Approximate sqrt(3) to identify duplicate rows correctly.
 
 
 class Tile:
@@ -17,7 +18,7 @@ class Tile:
 
     # Define the vectors for the periodic lattice structure.
     a_1 = np.array([1,0,0])
-    a_2 = np.array([0.5, 0.5*np.sqrt(3), 0])
+    a_2 = np.array([0.5, 0.5*sqrt_3, 0])
     a_3 = np.array([0, 0, 1])
 
     def __init__(self, origin=np.array([0, 0, 0])):
@@ -54,8 +55,7 @@ class Lattice(Tile):
         self.zdim = zdim
         self.grid = self.tessellate()  # Make grid upon instantiation.
 
-    def tessellate(self):
-        # Generate an array of origins for tiles.
+    def tessellate(self):  # Generate an array of origins for tiles.
         origins = np.zeros(shape=(self.xdim, self.ydim, self.zdim, 3))
 
         for i in range(self.xdim):
@@ -73,7 +73,7 @@ class Lattice(Tile):
                 for k in range(self.zdim):
                     yield Tile(self.grid[i, j, k]).vertices
 
-    def plot_lattice(self):  # Plot the lattice in 3D. 
+    def plot_lattice(self):  # Plot the lattice in 3D. Add 2D capacity as well?
         x_vals = np.array([])
         y_vals = np.array([])
         z_vals = np.array([])
@@ -92,24 +92,28 @@ class Lattice(Tile):
         ax.scatter(x_vals, y_vals, z_vals)
         plt.show()
 
-    def populate(self):  # Generate list of Molecule objects.
+    '''Function to remove duplicate vertex vectors, avoiding >1 Molecule at each
+       vertex in lattice. See: http://stackoverflow.com/a/16971224/6731049'''
+    def unique_rows(self, data):
+        uniq = np.unique(data.view(data.dtype.descr * data.shape[1]))
+        return uniq.view(data.dtype).reshape(-1, data.shape[1])
+
+    def populate(self):  #Generate list of Molecule objects; one at each vertex.
         x_vals = np.array([])
         y_vals = np.array([])
         z_vals = np.array([])
-        
+
         for vertices in self.get_vertices():
             x_vals = np.append(x_vals, vertices[:,0,])
             y_vals = np.append(y_vals, vertices[:,1,])
             z_vals = np.append(z_vals, vertices[:,2,])
         
         molecules = np.array(zip(x_vals, y_vals, z_vals))
+        blobs = [Molecule(molecule) for molecule in self.unique_rows(molecules)]
 
-        #FIXME: Need to remove dupliacte rows from the above array.
-        #Repeated code with plot_lattice. Will refine later on. 
-
-        return molecules
+        return blobs
 
 if __name__ == "__main__":
-    lattice = Lattice(2,1,1)
+    lattice = Lattice(2,2,1)
     #lattice.plot_lattice()
     print lattice.populate()
