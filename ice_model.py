@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 
 p = 6.2e-30  # Dipole moment of water molecule.
@@ -29,50 +30,86 @@ class Tile:
                                   self.origin - self.a_1,
                                   self.origin - self.a_1 + self.a_2))
 
+class Molecule:
+
+    __doc__ = """Molecule class contains all the methods required for a simple
+                 representation of a water molecule in the lattice."""
+
+    def __init__(self, location, mu=None):  
+        self.location = location  # Insert vertex vector here?
+        self.mu = mu  # Initialize with vector pointing in mu direction?
+
+    def interation(self):  # Strength of interactions between Molecule objects.
+        pass
+
 
 class Lattice(Tile):
 
     __doc__ = """Lattice class will generate a Tile for each origin. No. origins
                  specified by the xdim & ydim arguments."""
 
-    def __init__(self, xdim, ydim, zdim=None):
+    def __init__(self, xdim, ydim, zdim):
         self.xdim = xdim
         self.ydim = ydim
-        self.zdim = zdim               # Restrict to 2D for now.
+        self.zdim = zdim
         self.grid = self.tessellate()  # Make grid upon instantiation.
 
     def tessellate(self):
-        # Generate an array of origins for tiles. Nominally 3D at the moment.
-        origins = np.zeros(shape=(self.xdim, self.ydim, 3))
+        # Generate an array of origins for tiles.
+        origins = np.zeros(shape=(self.xdim, self.ydim, self.zdim, 3))
 
         for i in range(self.xdim):
             for j in range(self.ydim):
-                origins[i, j, ] = i*(self.a_1 + self.a_2)    + \
-                                  j*(-self.a_1 + 2*self.a_2)
-        
+                for k in range(self.zdim):
+                    origins[i, j, k] = i*(self.a_1 + self.a_2)    \
+                                     + j*(-self.a_1 + 2*self.a_2) \
+                                     + k*self.a_3
         return origins
 
     def get_vertices(self):  # Get all the vertices of points on grid.
 
         for i in range(self.xdim):
             for j in range(self.ydim):
-                yield Tile(self.grid[i, j, ]).vertices
+                for k in range(self.zdim):
+                    yield Tile(self.grid[i, j, k]).vertices
 
-    def plot_lattice(self):  # Plot the lattice in the z=0 plane. 
+    def plot_lattice(self):  # Plot the lattice in 3D. 
         x_vals = np.array([])
         y_vals = np.array([])
+        z_vals = np.array([])
         
         for vertices in self.get_vertices():
             x_vals = np.append(x_vals, vertices[:,0,])
             y_vals = np.append(y_vals, vertices[:,1,])
+            z_vals = np.append(z_vals, vertices[:,2,])      
         
-        plt.scatter(x_vals, y_vals)
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        plt.suptitle("1H ice lattice")
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+        ax.scatter(x_vals, y_vals, z_vals)
         plt.show()
 
-"""for vertex in a.vertices:
-      if vertex in b.vertices:
-        intercept = True"""
+    def populate(self):  # Generate list of Molecule objects.
+        x_vals = np.array([])
+        y_vals = np.array([])
+        z_vals = np.array([])
+        
+        for vertices in self.get_vertices():
+            x_vals = np.append(x_vals, vertices[:,0,])
+            y_vals = np.append(y_vals, vertices[:,1,])
+            z_vals = np.append(z_vals, vertices[:,2,])
+        
+        molecules = np.array(zip(x_vals, y_vals, z_vals))
+
+        #FIXME: Need to remove dupliacte rows from the above array.
+        #Repeated code with plot_lattice. Will refine later on. 
+
+        return molecules
 
 if __name__ == "__main__":
-    lattice = Lattice(5,5)
-    lattice.plot_lattice()
+    lattice = Lattice(2,1,1)
+    #lattice.plot_lattice()
+    print lattice.populate()
