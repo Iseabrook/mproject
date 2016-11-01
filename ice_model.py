@@ -43,17 +43,25 @@ class Molecule:
     def interation(self):  # Strength of interactions between Molecule objects.
         pass
 
+    def align(self, vector):  # Align itself along a given lattice vector?
+        pass
 
 class Lattice(Tile):
 
-    __doc__ = """Lattice class will generate a Tile for each origin. No. origins
-                 specified by the xdim & ydim arguments."""
+    __doc__ = """Lattice class will generate a Tile for each origin. Number of
+                 origins specified by the xdim & ydim arguments.
+                 Lattice class can """
 
     def __init__(self, xdim, ydim, zdim):
         self.xdim = xdim
         self.ydim = ydim
         self.zdim = zdim
         self.grid = self.tessellate()  # Make grid upon instantiation.
+        vals = self.generate_values()
+        self.x_vals = vals[0]
+        self.y_vals = vals[1]
+        self.z_vals = vals[2]
+        
 
     def tessellate(self):  # Generate an array of origins for tiles.
         origins = np.zeros(shape=(self.xdim, self.ydim, self.zdim, 3))
@@ -73,32 +81,7 @@ class Lattice(Tile):
                 for k in range(self.zdim):
                     yield Tile(self.grid[i, j, k]).vertices
 
-    def plot_lattice(self):  # Plot the lattice in 3D. Add 2D capacity as well?
-        x_vals = np.array([])
-        y_vals = np.array([])
-        z_vals = np.array([])
-        
-        for vertices in self.get_vertices():
-            x_vals = np.append(x_vals, vertices[:,0,])
-            y_vals = np.append(y_vals, vertices[:,1,])
-            z_vals = np.append(z_vals, vertices[:,2,])      
-        
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        plt.suptitle("1H ice lattice")
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_zlabel('z')
-        ax.scatter(x_vals, y_vals, z_vals)
-        plt.show()
-
-    '''Function to remove duplicate vertex vectors, avoiding >1 Molecule at each
-       vertex in lattice. See: http://stackoverflow.com/a/16971224/6731049'''
-    def unique_rows(self, data):
-        uniq = np.unique(data.view(data.dtype.descr * data.shape[1]))
-        return uniq.view(data.dtype).reshape(-1, data.shape[1])
-
-    def populate(self):  #Generate list of Molecule objects; one at each vertex.
+    def generate_values(self):  # Arrays of all x, y and z vertex positions.
         x_vals = np.array([])
         y_vals = np.array([])
         z_vals = np.array([])
@@ -107,13 +90,32 @@ class Lattice(Tile):
             x_vals = np.append(x_vals, vertices[:,0,])
             y_vals = np.append(y_vals, vertices[:,1,])
             z_vals = np.append(z_vals, vertices[:,2,])
-        
-        molecules = np.array(zip(x_vals, y_vals, z_vals))
-        blobs = [Molecule(molecule) for molecule in self.unique_rows(molecules)]
 
-        return blobs
+        return np.array([x_vals, y_vals, z_vals])
+
+    '''Function to remove duplicate vertex vectors, avoiding >1 Molecule at each
+       vertex in lattice. See: http://stackoverflow.com/a/16971224/6731049'''
+    def unique_rows(self, data):
+        uniq = np.unique(data.view(data.dtype.descr * data.shape[1]))
+        return uniq.view(data.dtype).reshape(-1, data.shape[1])
+    # Should the above be a static method? Only used once. Investigate later.
+
+    def populate(self):  #Generate list of Molecule objects; one at each vertex.
+        vertices = np.array(zip(self.x_vals, self.y_vals, self.z_vals))
+        molecules = [Molecule(vertex) for vertex in self.unique_rows(vertices)]
+        return molecules
+
+    def plot_lattice(self):  # Plot the lattice in 3D. Add 2D capacity as well?
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        plt.suptitle("1H ice lattice")
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+        ax.scatter(self.x_vals, self.y_vals, self.z_vals)
+        return plt.show()
 
 if __name__ == "__main__":
-    lattice = Lattice(2,2,1)
+    lattice = Lattice(3,3,1)
     #lattice.plot_lattice()
     print lattice.populate()
