@@ -6,3 +6,5 @@ if __name__ == "__main__":
     #lattice.plot_lattice()
     mset = MoleculeSet(lattice.vertices)
     print mset.moleculeset[0].location
+    mset.moleculeset[0].find_neighbours(mset.vertices)
+    print mset.moleculeset[0].nn

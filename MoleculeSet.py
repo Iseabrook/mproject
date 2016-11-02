@@ -1,8 +1,8 @@
 import numpy as np
-from Lattice import Lattice
+from Lattice import Lattice, Tile
 
 
-class Molecule:
+class Molecule(Tile):
 
     __doc__ = """Molecule class contains all the methods required for a simple
                  representation of a water molecule in the lattice."""
@@ -18,8 +18,16 @@ class Molecule:
     def align(self, vector):  # Align itself along a given lattice vector?
         pass
 
+    def find_neighbours(self, vertices):  # Assume full lattice. Find nn.
+        vectors = [self.a_1, self.a_2, self.a_3]  # THESE WON'T FIND ALL NN.
+        for vector in vectors:
+            if np.add(vector, self.location) in vertices:
+                self.nn.append(np.add(vector, self.location))
 
-class MoleculeSet:
+# nn = Molecule to which it is bonded. Will only have one vertical bond.
+# Could be avoided if Tile stores nn, somehow.
+
+class MoleculeSet(Lattice):
 
     def __init__(self, vertices):
         self.vertices = vertices
@@ -33,8 +41,5 @@ class MoleculeSet:
     # Should the above be a static method? Only used once. Investigate later.
 
     def generate_mset(self):
-        vertices = np.array(zip(self.vertices[0], 
-                                self.vertices[1], 
-                                self.vertices[2]))
-        molecules = [Molecule(vertex) for vertex in self.unique_rows(vertices)]
-        return molecules
+        molecules = [Molecule(vertex) for vertex in self.unique_rows(self.vertices)]
+        return molecules 

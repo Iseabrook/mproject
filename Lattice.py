@@ -34,11 +34,15 @@ class Lattice(Tile):
                  Lattice class can """
 
     def __init__(self, xdim, ydim, zdim):
-        self.xdim = xdim
+        self.xdim = xdim  # are dims required after intial setup?
         self.ydim = ydim
         self.zdim = zdim
         self.grid = self.tessellate()  # Make grid upon instantiation.
-        self.vertices = self.generate_values()
+        vals = self.store_vertices()
+        self.x_vals = vals['x_vals']
+        self.y_vals = vals['y_vals']
+        self.z_vals = vals['z_vals']
+        self.vertices = vals['vertices']
 
     def tessellate(self):  # Generate an array of origins for tiles.
         origins = np.zeros(shape=(self.xdim, self.ydim, self.zdim, 3))
@@ -58,7 +62,7 @@ class Lattice(Tile):
                 for k in range(self.zdim):
                     yield Tile(self.grid[i, j, k]).vertices
 
-    def generate_values(self):  # Arrays of all x, y and z vertex positions.
+    def store_vertices(self):  # Arrays of all x, y and z vertex positions.
         x_vals = np.array([])
         y_vals = np.array([])
         z_vals = np.array([])
@@ -67,8 +71,10 @@ class Lattice(Tile):
             x_vals = np.append(x_vals, vertices[:,0,])
             y_vals = np.append(y_vals, vertices[:,1,])
             z_vals = np.append(z_vals, vertices[:,2,])
-
-        return np.array([x_vals, y_vals, z_vals])
+        
+        vertices = np.array(zip(x_vals, y_vals, z_vals))
+        return {'x_vals':x_vals, 'y_vals':y_vals, 
+                'z_vals':z_vals, 'vertices':vertices}
         
     def plot_lattice(self):  # Plot the lattice in 3D. Add 2D capacity as well?
         fig = plt.figure()
@@ -77,5 +83,5 @@ class Lattice(Tile):
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
-        ax.scatter(self.vertices[0], self.vertices[1], self.vertices[2])
+        ax.scatter(self.x_vals, self.y_vals, self.z_vals)
         return plt.show()
