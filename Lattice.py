@@ -25,6 +25,15 @@ class Tile:
                                   self.origin - self.a_2,
                                   self.origin - self.a_1,
                                   self.origin - self.a_1 + self.a_2))
+        self.tuplevertices = [self.vertices]
+        self.spin = np.array([1,-1,1,-1,1,-1])
+        self.ind = [a[2] for a in self.tuplevertices]#FIXME
+        self.dipole = []
+        if np.remainder([a[2] for a in self.ind],2) == [0.0]:#need to check the theory
+                     self.dipole = np.array(zip(self.vertices, self.spin))
+        else:
+            self.dipole = np.array(zip(self.vertices, self.spin*-1))
+        print self.dipole
 
 
 class Lattice(Tile):
